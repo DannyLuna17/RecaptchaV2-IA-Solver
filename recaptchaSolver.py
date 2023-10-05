@@ -391,8 +391,6 @@ def solve_recaptcha(driver):
             print(e)
 
 def solver(url: str, cookies: dict=None, proxy: str=None):
-    start = time()
-
     if proxy:
         seleniumwire_options = {
             'proxy': {
@@ -400,6 +398,7 @@ def solver(url: str, cookies: dict=None, proxy: str=None):
                 'https': f'https://{proxy}'
             },
             'no_proxy': 'localhost,127.0.0.1',
+            'disable_encoding': True
         }
     else:
         seleniumwire_options = {
@@ -419,14 +418,12 @@ def solver(url: str, cookies: dict=None, proxy: str=None):
 
     driver.get(url)
     
+    start = time()
     solve_recaptcha(driver)
     driver.quit()
 
-    time_taken = (time() - start)._round(2)
+    time_taken = (time() - start).__round__(2)
     token = driver.token
     cookies = driver.cookies
     
     return {"recaptcha_token" : token, "cookies" : cookies, "time_taken": time_taken}
-
-# Example
-print(solver("https://google.com/recaptcha/api2/demo"))
