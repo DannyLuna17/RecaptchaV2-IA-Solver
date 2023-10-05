@@ -422,7 +422,7 @@ def solver(url: str, cookies: dict=None, proxy: str=None):
     solve_recaptcha(driver)
     driver.quit()
 
-    time_taken = time() - start
+    time_taken = (time() - start)._round(2)
     token = driver.token
     cookies = driver.cookies
     
