@@ -16,10 +16,11 @@ To solve a reCAPTCHA on a given website, call the solver function with the URL o
 
 ```python
 from recaptchaSolver import solver
+
 data = solver("https://google.com/recaptcha/api2/demo")
 print(data)
 
->>> {"recaptcha_token":"03AF...", "cookies":[{'domain': 'google.com', 'expiry': 1712089489, 'httpOnly': True, 'name': '_GRECAPTCHA', 'path': '/recaptcha', 'sameSite': 'None', 'secure': True, 'value': '09ABIyMg698...'}], "time_taken":42.43}
+>>> {'recaptcha_token': '03AFcWeA5DAmOX4jOxRT0UtebPHstpHiAy8DCeYgFG1vcekDPVsSRHOsC-ELzjJIohG4wgOQwyK6gHIsJayzswis7qJOZPXDVplKRNG1Y3lM7oQoxdDwFCxsBAez-507jeyaGRwuXc2FYtrjslR2Q8tCRPaYz5vO07LY1nU-jZf4k6rehzQk6cX2Psdh_9EgF9yRteWemWiqFkx4TLMZjeVnCe18GPN1HQwNMiFwJK5IBubaJnyNsf3svbWnTMoTZKodGiU4S-cz6iEmkuIHZvunaW3G8C4WqAQdtgRxpHiu5yywgjJOOWdwwfO8lKKZv7569tNG9Zk9bhnrYNuuV_Mr2PT0SmqSyd5fuJKVaxA1qKOP5-36b5w09jJbKoEAjlTuplaWSbTkFEMsKQzG0MKFBPECybIHLelx5Eu7p5qK0frQBp-NMCvISdu282gSymqoVDMAlnC3DiKmAAdhB2o9ls7mFnMPvd55YIkhWjcFdknU3nA4cwZ6QHLVYVy88-S6bz_AeG_WrI50oPja19ppNoR4M3edaSU00Sjz3rgnAc0_kYJKPLoyll62oVhoOFuA4DCXgvVqvw', 'cookies': [{'domain': 'www.google.com', 'expiry': 1712090971, 'httpOnly': True, 'name': '_GRECAPTCHA', 'path': '/recaptcha', 'sameSite': 'None', 'secure': True, 'value': '09ABIyMg4lTwpqPFVOodY277MdxyhTyieMCdLi-lvuETHxnScwGYQL6vDW4tXuk6kMsha7nSpY144xhV9y2LyaGug'}], 'time_taken': 23.59}
 ```
 
 ## Requirements
