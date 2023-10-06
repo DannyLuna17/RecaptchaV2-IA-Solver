@@ -86,7 +86,7 @@ def get_target_num(driver):
     return 1000
 
 
-def dynamic_and_selection_solver(target_num, verbose):
+def dynamic_and_selection_solver(target_num, verbose, model):
     """
     Get the answers from the recaptcha images.
     :param target_num: target number.
@@ -219,7 +219,7 @@ def get_occupied_cells(vertices):
 
     return sorted(list(occupied_cells))
 
-def square_solver(target_num, verbose):
+def square_solver(target_num, verbose, model):
     """
     Get the answers from the recaptcha images.
     :param target_num: target number.
@@ -321,6 +321,8 @@ def solve_recaptcha(driver, verbose):
 
     go_to_recaptcha_iframe2(driver)
 
+    model = YOLO("./yolov8x.onnx", task="detect")
+
     while True:
         try:
             while True:
@@ -339,7 +341,7 @@ def solve_recaptcha(driver, verbose):
                     if verbose: print("Square captcha found....")
                     img_urls = get_all_captcha_img_urls(driver)
                     download_img(0, img_urls[0])
-                    answers = square_solver(target_num, verbose)
+                    answers = square_solver(target_num, verbose, model)
                     if len(answers) >= 1 and len(answers) < 16:
                         captcha = "squares"
                         break
@@ -349,7 +351,7 @@ def solve_recaptcha(driver, verbose):
                     if verbose: print("found a 3x3 dynamic captcha")
                     img_urls = get_all_captcha_img_urls(driver)
                     download_img(0, img_urls[0])
-                    answers = dynamic_and_selection_solver(target_num, verbose)
+                    answers = dynamic_and_selection_solver(target_num, verbose, model)
                     if len(answers) > 2:
                         captcha = "dynamic"
                         break
@@ -359,7 +361,7 @@ def solve_recaptcha(driver, verbose):
                     if verbose: print("found a 3x3 one time selection captcha")
                     img_urls = get_all_captcha_img_urls(driver)
                     download_img(0, img_urls[0])
-                    answers = dynamic_and_selection_solver(target_num, verbose)
+                    answers = dynamic_and_selection_solver(target_num, verbose, model)
                     if len(answers) > 2:
                         captcha = "selection"
                         break
@@ -409,7 +411,7 @@ def solve_recaptcha(driver, verbose):
                             for index in new_img_index_urls:
                                 download_img(index+1, img_urls[index])
 
-                    answers = dynamic_and_selection_solver(target_num, verbose)
+                    answers = dynamic_and_selection_solver(target_num, verbose, model)
 
                     if len(answers) >= 1:
                         for answer in answers:
