@@ -1,97 +1,110 @@
-import seleniumwire.undetected_chromedriver as webdriver
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-import shutil
-import requests
+# Standard imports
 import re
-from ultralytics import YOLO
-import numpy as np
-from PIL import Image
+import shutil
 from time import sleep, time
+
+# Third-party imports
 import cv2
+import numpy as np
+import requests
+from PIL import Image
+from ultralytics import YOLO
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+import seleniumwire.undetected_chromedriver as webdriver
 
-
+# Initialize YOLO model
 model = YOLO("./yolov8x.onnx", task="detect")
 
-
-class Driver(webdriver.Chrome):
-     def __init__(self, *args, **kwargs):
-             super().__init__(*args, **kwargs)
-             self.response_interceptor = self.intercept_token
-     def intercept_token(self, request, resp):
-            try:
-                if 'recaptcha/api2/userverify' in str(request.url):
-                        self.token = find_between(str(resp.body), 'uvresp","', '"')
-                        self.cookies = self.get_cookies()
-                        del self.response_interceptor
-
-            except Exception as e:
-                print(e)
-
-
 def find_between(s, first, last):
-      try:
-          start = s.index(first) + len(first)
-          end = s.index(last, start)
-          return s[start:end]
-      except ValueError:
-          return ""
+    """
+    Find a substring between two substrings.
+    :param s: string to search.
+    :param first: first substring.
+    :param last: last substring.
+    """
+    try:
+        start = s.index(first) + len(first)
+        end = s.index(last, start)
+        return s[start:end]
+    except ValueError:
+        return ""
 
 
 def random_delay(mu=0.3, sigma=0.1):
+    """
+    Random delay to simulate human behavior.
+    :param mu: mean of normal distribution.
+    :param sigma: standard deviation of normal distribution.
+    """
     delay = np.random.normal(mu, sigma)
     delay = max(0.1, delay)
     sleep(delay)
 
 
 def go_to_recaptcha_iframe1(driver):
+    """
+    Go to the first recaptcha iframe. (CheckBox)
+    """
     driver.switch_to.default_content()
-    recaptcha_iframe1 = WebDriverWait(driver=driver, timeout=10).until(
+    recaptcha_iframe1 = WebDriverWait(driver=driver, timeout=20).until(
         EC.presence_of_element_located((By.XPATH, '//iframe[@title="reCAPTCHA"]')))
     driver.switch_to.frame(recaptcha_iframe1)
 
 
 def go_to_recaptcha_iframe2(driver):
+    """
+    Go to the second recaptcha iframe. (Images)
+    """
     driver.switch_to.default_content()
-    recaptcha_iframe2 = WebDriverWait(driver=driver, timeout=10).until(
+    recaptcha_iframe2 = WebDriverWait(driver=driver, timeout=20).until(
         EC.presence_of_element_located((By.XPATH, '//iframe[contains(@title, "challenge")]')))
     driver.switch_to.frame(recaptcha_iframe2)
 
 
 def get_target_num(driver):
+    """
+    Get the target number from the recaptcha title.
+    """
+    target_mappings = {
+        "bicycle": 1,
+        "bus": 5,
+        "boat": 8,
+        "car": 2,
+        "hydrant": 10,
+        "motorcycle": 3,
+        "traffic": 9
+    }
+
     target = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
         (By.XPATH, '//div[@id="rc-imageselect"]//strong')))
+    
+    for term, value in target_mappings.items():
+        if re.search(term, target.text): return value
 
-    if re.search(r"bicycle", target.text) != None:
-        return 1
-    elif re.search(r"bus", target.text) != None:
-        return 5
-    elif re.search(r"boat", target.text) != None:
-        return 8
-    elif re.search(r"car", target.text) != None:
-        return 2
-    elif re.search(r"hydrant", target.text) != None:
-        return 10
-    elif re.search(r"motorcycle", target.text) != None:
-        return 3
-    elif re.search(r"traffic", target.text) != None:
-        return 9
-    else:
-        return 1000
+    return 1000
 
 
-def get_answers(target_num):
+def dynamic_and_selection_solver(target_num, verbose):
+    """
+    Get the answers from the recaptcha images.
+    :param target_num: target number.
+    :param verbose: print verbose.
+    """
+    # Load image and predict
     image = Image.open("0.png")
     image = np.asarray(image)
-    result = model.predict(image, task="detect")
+    result = model.predict(image, task="detect", verbose=verbose)
 
+    # Get the index of the target number
     target_index = []
     count = 0
     for num in result[0].boxes.cls:
         if num == target_num: target_index.append(count)
         count += 1
 
+    # Get the answers from the index
     answers = []
     boxes = result[0].boxes.data
     count = 0
@@ -116,6 +129,9 @@ def get_answers(target_num):
 
 
 def get_all_captcha_img_urls(driver):
+    """
+    Get all the image urls from the recaptcha.
+    """
     images = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located(
         (By.XPATH, '//div[@id="rc-imageselect-target"]//img')))
 
@@ -126,26 +142,40 @@ def get_all_captcha_img_urls(driver):
 
 
 def download_img(name, url):
+    """
+    Download the image.
+    :param name: name of the image.
+    :param url: url of the image.
+    """
+
     response = requests.get(url, stream=True)
     with open(f'{name}.png', 'wb') as out_file: shutil.copyfileobj(response.raw, out_file)
     del response
 
 
 def get_all_new_dynamic_captcha_img_urls(answers, before_img_urls, driver):
+    """
+    Get all the new image urls from the recaptcha.
+    :param answers: answers from the recaptcha.
+    :param before_img_urls: image urls before.
+    """
     images = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located(
         (By.XPATH, '//div[@id="rc-imageselect-target"]//img')))
     img_urls = []
 
+    # Get all the image urls
     for img in images:
         try: img_urls.append(img.get_attribute("src"))
         except:
             is_new = False
             return is_new, img_urls
 
+    # Check if the image urls are the same as before
     index_common = []
     for answer in answers:
         if img_urls[answer-1] == before_img_urls[answer-1]: index_common.append(answer)
 
+    # Return if the image urls are the same as before
     if len(index_common) >= 1:
         is_new = False
         return is_new, img_urls
@@ -155,6 +185,12 @@ def get_all_new_dynamic_captcha_img_urls(answers, before_img_urls, driver):
 
 
 def paste_new_img_on_main_img(main, new, loc):
+    """
+    Paste the new image on the main image.
+    :param main: main image.
+    :param new: new image.
+    :param loc: location of the new image.
+    """
     paste = np.copy(main)
     
     row = (loc - 1) // 3
@@ -170,6 +206,10 @@ def paste_new_img_on_main_img(main, new, loc):
 
 
 def get_occupied_cells(vertices):
+    """
+    Get the occupied cells from the vertices.
+    :param vertices: vertices of the image.
+    """
     occupied_cells = set()
     rows, cols = zip(*[((v-1)//4, (v-1) % 4) for v in vertices])
 
@@ -179,11 +219,16 @@ def get_occupied_cells(vertices):
 
     return sorted(list(occupied_cells))
 
-
-def get_answers_4(target_num):
+def square_solver(target_num, verbose):
+    """
+    Get the answers from the recaptcha images.
+    :param target_num: target number.
+    :param verbose: print verbose.
+    """
+    # Load image and predict
     image = Image.open("0.png")
     image = np.asarray(image)
-    result = model.predict(image, task="detect")
+    result = model.predict(image, task="detect", verbose=verbose)
     boxes = result[0].boxes.data
 
     target_index = []
@@ -262,7 +307,13 @@ def get_answers_4(target_num):
     return list(set(answers))
 
 
-def solve_recaptcha(driver):
+def solve_recaptcha(driver, verbose):
+    """
+    Solve the recaptcha.
+    :param driver: selenium driver.
+    :param verbose: print verbose.
+    """
+
     go_to_recaptcha_iframe1(driver)
 
     WebDriverWait(driver, 10).until(EC.element_to_be_clickable(
@@ -282,33 +333,33 @@ def solve_recaptcha(driver):
 
                 if target_num == 1000:
                     random_delay()
-                    print("skipping")
+                    if verbose: print("skipping")
                     reload.click()
                 elif "squares" in title_wrapper.text:
-                    print("Square captcha found....")
+                    if verbose: print("Square captcha found....")
                     img_urls = get_all_captcha_img_urls(driver)
                     download_img(0, img_urls[0])
-                    answers = get_answers_4(target_num)
+                    answers = square_solver(target_num, verbose)
                     if len(answers) >= 1 and len(answers) < 16:
                         captcha = "squares"
                         break
                     else:
                         reload.click()
                 elif "none" in title_wrapper.text:
-                    print("found a 3x3 dynamic captcha")
+                    if verbose: print("found a 3x3 dynamic captcha")
                     img_urls = get_all_captcha_img_urls(driver)
                     download_img(0, img_urls[0])
-                    answers = get_answers(target_num)
+                    answers = dynamic_and_selection_solver(target_num, verbose)
                     if len(answers) > 2:
                         captcha = "dynamic"
                         break
                     else:
                         reload.click()
                 else:
-                    print("found a 3x3 one time selection captcha")
+                    if verbose: print("found a 3x3 one time selection captcha")
                     img_urls = get_all_captcha_img_urls(driver)
                     download_img(0, img_urls[0])
-                    answers = get_answers(target_num)
+                    answers = dynamic_and_selection_solver(target_num, verbose)
                     if len(answers) > 2:
                         captcha = "selection"
                         break
@@ -358,7 +409,7 @@ def solve_recaptcha(driver):
                             for index in new_img_index_urls:
                                 download_img(index+1, img_urls[index])
 
-                    answers = get_answers(target_num)
+                    answers = dynamic_and_selection_solver(target_num, verbose)
 
                     if len(answers) >= 1:
                         for answer in answers:
@@ -382,7 +433,7 @@ def solve_recaptcha(driver):
                 go_to_recaptcha_iframe1(driver)
                 WebDriverWait(driver, 4).until(
                     EC.presence_of_element_located((By.XPATH, '//span[contains(@aria-checked, "true")]')))
-                print("solved")
+                if verbose: print("solved")
                 driver.switch_to.default_content()
                 break
             except:
@@ -390,7 +441,18 @@ def solve_recaptcha(driver):
         except Exception as e:
             print(e)
 
-def solver(url: str, cookies: dict=None, proxy: str=None):
+
+def solver(url: str, cookies: dict=None, proxy: str=None, verbose=False, headless=True):
+    """
+    Solve the recaptcha.
+    :param url: url of the recaptcha.
+    :param cookies: cookies of the recaptcha.
+    :param proxy: proxy for seleniumwire.
+    :param verbose: print verbose.
+    :param headless: run in headless mode.
+    """
+
+    # Set Up seleniumwire options with proxy if provided
     if proxy:
         seleniumwire_options = {
             'proxy': {
@@ -398,32 +460,44 @@ def solver(url: str, cookies: dict=None, proxy: str=None):
                 'https': f'https://{proxy}'
             },
             'no_proxy': 'localhost,127.0.0.1',
-            'disable_encoding': True
+            'disable_encoding': True,
+            'verify_ssl': False
         }
     else:
         seleniumwire_options = {
             'no_proxy': 'localhost,127.0.0.1',
-            'disable_encoding': True
+            'disable_encoding': True,
+            'verify_ssl': False
         }
 
+    # Set Up Chrome Options with headless and no image loading if provided
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--ignore-certificate-errors-spki-list')
     chrome_options.add_argument('--ignore-ssl-errors')
     chrome_options.add_argument('--lang=en-US')
+    if headless:
+        chrome_options.add_argument('--headless')
+        chrome_prefs = {"profile.managed_default_content_settings.images": 2}
+        chrome_options.add_experimental_option("prefs", chrome_prefs)
 
-    driver = Driver(options=chrome_options, seleniumwire_options=seleniumwire_options)
-
+    # Initialize driver with options and cookies if provided
+    driver = webdriver.Chrome(options=chrome_options, seleniumwire_options=seleniumwire_options)
+    driver.scopes = ['.*google.com/recaptcha.*']
     if cookies: driver.add_cookie(cookies)
 
+    # Solve recaptcha
     driver.get(url)
-    
     start = time()
-    solve_recaptcha(driver)
-    driver.quit()
+    solve_recaptcha(driver, verbose)
 
+    # Get recaptcha token and cookies
+    for request in driver.requests:
+        if 'recaptcha/api2/userverify' in request.url: token = find_between(request.response.body.decode('utf-8'), 'uvresp","', '"')
+    cookies = driver.get_cookies()
+
+    # Close driver and return results
+    driver.quit()
     time_taken = (time() - start).__round__(2)
-    token = driver.token
-    cookies = driver.cookies
     
     return {"recaptcha_token" : token, "cookies" : cookies, "time_taken": time_taken}
