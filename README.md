@@ -28,7 +28,7 @@ print(data)
 ## Requirements
 
 * python 3.x
-* ultralyticse
+* ultralytics
 * undetected_chromedriver
 * selenium-wire
 * selenium
