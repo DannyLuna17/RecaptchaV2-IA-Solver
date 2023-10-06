@@ -15,7 +15,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 import seleniumwire.undetected_chromedriver as webdriver
 
 # Initialize YOLO model
-model = YOLO("./yolov8x.onnx", task="detect")
+model = YOLO("./model.onnx", task="detect")
 
 def find_between(s, first, last):
     """
