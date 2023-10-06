@@ -1,0 +1,5 @@
+undetected-chromedriver==3.5.3
+ultralytics==8.0.188
+selenium==4.12.0
+selenium-utilities==1.2.0
+selenium-wire==5.1.0
