@@ -15,7 +15,7 @@ https://github.com/LunaPy17/RecaptchaV2-IA-Solver/assets/69711934/9b0072ef-3e67-
 ## How To Use
 
 To solve a reCAPTCHA on a given website, call the solver function with the URL of the site. Optionally, you can also pass cookies and proxy details.
-You can download the model form [Dropbox](https://www.dropbox.com/scl/fi/srwinrdyxe4h8e104mqll/yolov8x.onnx?rlkey=uh1ra9b5bsgg822e7ojfv0cd4&dl=0)
+You can download the model form [Dropbox](https://www.dropbox.com/scl/fi/srwinrdyxe4h8e104mqll/model.onnx?rlkey=uh1ra9b5bsgg822e7ojfv0cd4&dl=0)
 
 ```python
 from recaptchaSolver import solver
