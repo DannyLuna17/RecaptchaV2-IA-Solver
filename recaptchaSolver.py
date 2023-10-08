@@ -318,7 +318,7 @@ def solve_recaptcha(driver, verbose):
 
     go_to_recaptcha_iframe2(driver)
 
-    model = YOLO("./yolov8x.onnx", task="detect")
+    model = YOLO("./model.onnx", task="detect")
 
     while True:
         try:
