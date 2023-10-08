@@ -14,9 +14,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 import seleniumwire.undetected_chromedriver as webdriver
 
-# Initialize YOLO model
-model = YOLO("./model.onnx", task="detect")
-
 def find_between(s, first, last):
     """
     Find a substring between two substrings.
