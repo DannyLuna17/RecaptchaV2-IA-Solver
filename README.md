@@ -1,3 +1,18 @@
+<div align="center">
+
+# Repository Archived!
+
+[![STATUS: ARCHIVED](https://img.shields.io/badge/STATUS-ARCHIVED-red?style=for-the-badge)](#)
+[![GO TO: BulletDroid 2](https://img.shields.io/badge/GO%20TO-Vision--AI--Recaptcha--Solver-2ea44f?style=for-the-badge&logo=github)](https://github.com/DannyLuna17/VisionAIRecaptchaSolver)
+
+</div>
+
+> [!IMPORTANT]
+> **Notice:** This repository has been archived. 
+> A newer, better developed version is available here: **[VisionAIRecaptchaSolver](https://github.com/DannyLuna17/VisionAIRecaptchaSolver)**. 
+> New features, fixes, and support will land in VisionAIRecaptchaSolver. This repo remains public for reference.
+
+---
 RecaptchaV2-IA-Solver
 =====================
 
